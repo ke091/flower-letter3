@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>꽃</title>
+    <style>
+        /* 화면 전체 배경 (스마트폰이 돋보이도록 어두운 배경) */
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background-color: #2c3e50;
+            font-family: 'Noto Sans KR', sans-serif; overflow: hidden;
+        }
+
+        /* [변경] 스마트폰 비율(9:16) 프레임 */
+        .phone-container {
+            width: 360px;
+            height: 640px;
+            background: linear-gradient(to bottom, #e8f0fe, #c2d6f4);
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 6px solid #1a252f; /* 스마트폰 베젤 느낌 */
+        }
+
+        /* 보내주신 안개꽃 이미지가 배치될 구역 */
+        .flower-image-container {
+            position: absolute;
+            left: -40px; 
+            bottom: 3%;
+            width: 240px; /* 핸드폰 크기에 맞게 조절 */
+            height: auto;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-50px) rotate(-10deg);
+            transition: all 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            z-index: 5;
+        }
+
+        /* 편지가 열리면 꽃 이미지가 나타남 */
+        .flower-image-container.show {
+            opacity: 1;
+            transform: translateX(0) rotate(0deg);
+            left: 2%;
+        }
+
+        .flower-image-container img {
+            width: 100%;
+            height: auto;
+            mix-blend-mode: screen; /* 검은색 배경 투명화 */
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
+        }
+
+        /* 편지봉투 구역 */
+        .envelope-wrapper { position: relative; text-align: center; z-index: 10; margin-top: 80px; }
+        .envelope {
+            position: relative; width: 300px; height: 200px;
+            background-color: #778899; border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            display: flex; justify-content: center;
+        }
+        
+        /* 편지 속지 기본 스타일 */
+        .letter {
+            position: absolute; bottom: 10px; width: 270px; height: 170px;
+            background-color: #ffffff; border-radius: 8px; padding: 20px 15px;
+            box-sizing: border-box; box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.5s; 
+            z-index: 1; overflow: hidden;
+        }
+
+        /* [변경] 처음에는 투명하게 숨겨둘 구역 (꽃 정보 + 편지 내용 전체) */
+        .letter-inner-content {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            transition-delay: 0.4s; /* 편지가 다 올라온 뒤 글씨가 보이도록 타이밍 지연 */
+        }
+
+        /* 편지가 열렸을 때 투명도 1로 켜주는 클래스 */
+        .letter-inner-content.fade-in {
+            opacity: 1;
+        }
+
+        .flower-info { text-align: center; margin-bottom: 10px; }
+        .flower-name { font-size: 16px; font-weight: bold; color: #4a69bd; margin: 0; }
+        .flower-meaning { font-size: 11px; color: #888; margin: 3px 0 0 0; font-style: italic; }
+        .letter-content { color: #444; line-height: 1.6; font-size: 13px; text-align: center; }
+        
+        /* 버튼 스타일 */
+        .open-btn {
+            margin-top: 25px; padding: 10px 20px; background-color: #ffffff;
+            color: #57606f; border: 2px solid #57606f; border-radius: 25px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .open-btn:hover { background-color: #57606f; color: white; }
+        
+        /* 애니메이션 시 편지 올라가는 효과 (핸드폰 높이에 맞게 조절) */
+        .envelope.open .letter { transform: translateY(-130px); z-index: 2; height: auto; min-height: 220px; }
+        
+        /* 화면 전체에 날릴 안개꽃잎 설정 */
+        .flower-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .gypsophila {
+            position: absolute; background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 50%; box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-20px) translateX(0) rotate(0deg); }
+            50% { transform: translateY(30vh) translateX(15px) rotate(180deg); }
+            100% { transform: translateY(65vh) translateX(-10px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        
+        <div class="flower-container" id="flowerContainer"></div>
+
+        <div class="flower-image-container" id="flowerImage">
+            <img src="flower.jpg" alt="안개꽃">
+        </div>
+
+        <div class="envelope-wrapper">
+            <div class="envelope">
+                <div class="letter" id="letter">
+                    <div class="letter-inner-content" id="letterText">
+                        <div class="flower-info">
+                            <p class="flower-name">💐 안개꽃 </p>
+                            <p class="flower-meaning">꽃말 : 맑은 마음, 성공, 순수함</p>
+                        </div>
+                        <hr style="border: 0; height: 1px; background: #eee; margin-bottom: 12px;">
+                        <div class="letter-content">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="open-btn" onclick="openLetter()">편지 열어보기 ✉️</button>
+        </div>
+
+    </div>
+
+    <script>
+        function openLetter() {
+            const envelope = document.querySelector('.envelope');
+            const btn = document.querySelector('.open-btn');
+            const flowerImg = document.getElementById('flowerImage');
+            const letterText = document.getElementById('letterText'); // 글씨 그릇 가져오기
+            
+            envelope.classList.toggle('open');
+            
+            if (envelope.classList.contains('open')) {
+                btn.textContent = '편지 닫기 ✉️';
+                flowerImg.classList.add('show');
+                letterText.classList.add('fade-in'); // 편지 열릴 때 텍스트 서서히 등장!
+                
+                // 안개꽃 비 내리기 효과
+                for (let i = 0; i < 35; i++) { createGypsophila(); }
+            } else {
+                btn.textContent = '편지 열어보기 ✉️ ';
+                flowerImg.classList.remove('show');
+                letterText.classList.remove('fade-in'); // 편지 닫으면 글씨 다시 숨김
+            }
+        }
+
+        function createGypsophila() {
+            const container = document.getElementById('flowerContainer');
+            const flower = document.createElement('div');
+            flower.classList.add('gypsophila');
+            const size = Math.random() * 5 + 3; 
+            flower.style.width = `${size}px`;
+            flower.style.height = `${size}px`;
+            flower.style.left = Math.random() * 100 + '%'; /* 핸드폰 안에서만 돌도록 %로 수정 */
+            flower.style.animationDuration = Math.random() * 3 + 2 + 's';
+            flower.style.animationDelay = Math.random() * 2 + 's';
+            container.appendChild(flower);
+            setTimeout(() => { flower.remove(); }, 5000);
+        }
+    </script>
+</body>
+</html>
